@@ -41,14 +41,22 @@ pipeline {
         sh 'docker push ${IMAGE_URI}'
       }
     }
-
     stage('Deploy to EKS') {
       steps {
-        sh 'kubectl set image deployment/my-app my-app=${IMAGE_URI}'
-        sh 'kubectl rollout status deployment/my-app'
+        withCredentials([usernamePassword(
+          credentialsId: 'aws-creds',
+          usernameVariable: 'AWS_ACCESS_KEY_ID',
+          passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+        )]) {
+          sh '''
+            aws eks update-kubeconfig --region ap-northeast-2 --name my-eks
+            kubectl set image deployment/my-app my-app=${IMAGE_URI}
+            kubectl rollout status deployment/my-app
+          '''
+        }
       }
     }
-
-  }
+    
+  } 
 }
 
