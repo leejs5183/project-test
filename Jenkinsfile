@@ -50,9 +50,10 @@ pipeline {
         )]) {
           sh '''
             aws eks update-kubeconfig --region ap-northeast-2 --name my-eks
-            kubectl set image deployment/my-app my-app=${IMAGE_URI}
-            kubectl rollout status deployment/my-app
-          '''
+            sed "s#REPLACE_IMAGE#${IMAGE_URI}#g" k8s/deployment.yaml | kubectl apply -f -
+            kubectl apply -f k8s/service.yaml
+            kubectl rollout status deployment/my-app  
+	  '''
         }
       }
     }
